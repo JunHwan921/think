@@ -2,7 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <title>직관의 본질</title>
     <style>
         * {
@@ -21,6 +23,7 @@
             align-items: center;
             overflow: hidden;
             cursor: none;
+            position: relative;
         }
 
         /* 생각이 떠오르는 공간 */
@@ -33,31 +36,130 @@
             align-items: center;
         }
 
-        /* 중앙의 물음 - 제거됨 */
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* 입력 컨테이너 */
+        .input-container {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            z-index: 1000;
+        }
 
         /* 생각 입력 */
         .thought-input {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            max-width: 500px;
-            padding: 1rem;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            flex: 1;
+            padding: 1rem 1rem 1rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
             color: #fff;
-            font-size: 1.2rem;
-            text-align: center;
+            font-size: 1.1rem;
+            text-align: left;
             outline: none;
-            opacity: 0;
-            animation: fadeIn 2s forwards;
+            transition: all 0.3s;
+        }
+
+        .thought-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.4);
         }
 
         .thought-input::placeholder {
             color: rgba(255, 255, 255, 0.3);
         }
+
+        /* 태그 버튼 */
+        .tag-button {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .tag-button:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tag-button.tag-important { 
+            background: rgba(255, 68, 68, 0.8); 
+            border-color: transparent;
+        }
+        .tag-button.tag-idea { 
+            background: rgba(68, 255, 68, 0.8); 
+            border-color: transparent;
+        }
+        .tag-button.tag-todo { 
+            background: rgba(68, 68, 255, 0.8); 
+            border-color: transparent;
+        }
+        .tag-button.tag-memory { 
+            background: rgba(255, 170, 68, 0.8); 
+            border-color: transparent;
+        }
+        .tag-button.tag-question { 
+            background: rgba(255, 68, 255, 0.8); 
+            border-color: transparent;
+        }
+
+        /* 태그 선택 팝업 */
+        .tag-popup {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            margin-bottom: 10px;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: none;
+            gap: 0.3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .tag-popup.show {
+            display: flex;
+        }
+
+        .tag-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .tag-option:hover {
+            transform: scale(1.2);
+        }
+
+        .tag-option.normal { background: rgba(255, 255, 255, 0.3); }
+        .tag-option.important { background: #ff4444; }
+        .tag-option.idea { background: #44ff44; }
+        .tag-option.todo { background: #4444ff; }
+        .tag-option.memory { background: #ffaa44; }
+        .tag-option.question { background: #ff44ff; }
 
         /* 떠오르는 생각들 */
         .floating-thought {
@@ -69,6 +171,31 @@
             animation: float 20s infinite;
             cursor: pointer;
             transition: all 0.3s;
+        }
+
+        .floating-thought.tag-important {
+            background: rgba(255, 68, 68, 0.2);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+        }
+
+        .floating-thought.tag-idea {
+            background: rgba(68, 255, 68, 0.2);
+            border: 1px solid rgba(68, 255, 68, 0.3);
+        }
+
+        .floating-thought.tag-todo {
+            background: rgba(68, 68, 255, 0.2);
+            border: 1px solid rgba(68, 68, 255, 0.3);
+        }
+
+        .floating-thought.tag-memory {
+            background: rgba(255, 170, 68, 0.2);
+            border: 1px solid rgba(255, 170, 68, 0.3);
+        }
+
+        .floating-thought.tag-question {
+            background: rgba(255, 68, 255, 0.2);
+            border: 1px solid rgba(255, 68, 255, 0.3);
         }
 
         .floating-thought:hover {
@@ -167,6 +294,22 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        /* 태그 표시 */
+        .tag-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .tag-dot-important { background: #ff4444; }
+        .tag-dot-idea { background: #44ff44; }
+        .tag-dot-todo { background: #4444ff; }
+        .tag-dot-memory { background: #ffaa44; }
+        .tag-dot-question { background: #ff44ff; }
+
         @keyframes slideIn {
             from {
                 transform: translateX(50px);
@@ -262,13 +405,15 @@
 
         /* 모바일 대응 */
         @media (max-width: 768px) {
-            .question {
-                font-size: 1.5rem;
+            body {
+                cursor: auto;
             }
             
             .thought-input {
                 width: 90%;
                 font-size: 1rem;
+                bottom: 20%;
+                padding: 1rem 1rem 1rem 2.5rem;
             }
             
             .cursor-light {
@@ -286,6 +431,15 @@
                 font-size: 0.8rem;
                 padding: 0.4rem 0.8rem;
             }
+            
+            .time {
+                font-size: 2rem;
+            }
+            
+            .saved-thoughts {
+                right: 1rem;
+                max-width: 250px;
+            }
         }
     </style>
 </head>
@@ -293,11 +447,22 @@
     <div class="mind-space" id="mindSpace">
         <div class="time" id="clock"></div>
         
-
-        
-        <input type="text" class="thought-input" id="thoughtInput" 
-               placeholder="그냥 입력하세요..." 
-               autocomplete="off">
+        <div class="input-container">
+            <div style="position: relative; flex: 1;">
+                <div class="tag-button" id="tagButton"></div>
+                <input type="text" class="thought-input" id="thoughtInput" 
+                       placeholder="그냥 입력하세요..." 
+                       autocomplete="off">
+                <div class="tag-popup" id="tagPopup">
+                    <div class="tag-option normal" data-tag="normal"></div>
+                    <div class="tag-option important" data-tag="important"></div>
+                    <div class="tag-option idea" data-tag="idea"></div>
+                    <div class="tag-option todo" data-tag="todo"></div>
+                    <div class="tag-option memory" data-tag="memory"></div>
+                    <div class="tag-option question" data-tag="question"></div>
+                </div>
+            </div>
+        </div>
         
         <div class="saved-thoughts" id="savedThoughts"></div>
 
@@ -350,11 +515,36 @@
             setTimeout(() => ripple.remove(), 1000);
         });
 
+        // 태그 관련
+        let currentTag = 'normal';
+        const tagButton = document.getElementById('tagButton');
+        const tagPopup = document.getElementById('tagPopup');
+
+        // 태그 버튼 클릭
+        tagButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tagPopup.classList.toggle('show');
+        });
+
+        // 태그 선택
+        document.querySelectorAll('.tag-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentTag = option.dataset.tag;
+                tagButton.className = `tag-button tag-${currentTag}`;
+                tagPopup.classList.remove('show');
+            });
+        });
+
+        // 팝업 외부 클릭시 닫기
+        document.addEventListener('click', () => {
+            tagPopup.classList.remove('show');
+        });
+
         // 생각 입력
         const thoughtInput = document.getElementById('thoughtInput');
         const savedThoughts = document.getElementById('savedThoughts');
         const mindSpace = document.getElementById('mindSpace');
-        const question = document.getElementById('question');
         
         let thoughts = JSON.parse(localStorage.getItem('thoughts') || '[]');
         
@@ -362,8 +552,11 @@
             if (e.key === 'Enter' && thoughtInput.value.trim()) {
                 const thought = thoughtInput.value.trim();
                 saveThought(thought);
-                createFloatingThought(thought);
+                createFloatingThought(thought, currentTag);
                 thoughtInput.value = '';
+                // 태그 초기화
+                currentTag = 'normal';
+                tagButton.className = 'tag-button';
             }
         });
 
@@ -382,7 +575,8 @@
                 text: thought,
                 time: timeStr,
                 date: now.toISOString(),
-                dateStr: dateStr
+                dateStr: dateStr,
+                tag: currentTag
             });
             
             localStorage.setItem('thoughts', JSON.stringify(thoughts));
@@ -499,7 +693,9 @@
                 
                 html += `
                     <div class="thought-item" style="animation-delay: ${i * 0.05}s">
-                        <small style="opacity: 0.5">${thought.time}</small><br>
+                        <small style="opacity: 0.5">${thought.time}</small>
+                        ${thought.tag && thought.tag !== 'normal' ? `<span class="tag-dot tag-dot-${thought.tag}"></span>` : ''}
+                        <br>
                         ${thought.text}
                     </div>
                 `;
@@ -533,9 +729,9 @@
         }
 
         // 떠다니는 생각 생성
-        function createFloatingThought(text) {
+        function createFloatingThought(text, tag = 'normal') {
             const floater = document.createElement('div');
-            floater.className = 'floating-thought';
+            floater.className = `floating-thought ${tag ? 'tag-' + tag : ''}`;
             floater.textContent = text.length > 20 ? text.substring(0, 20) + '...' : text;
             
             // 랜덤 위치
@@ -605,7 +801,7 @@
                         
                         // 최근 5개 떠다니게 하기
                         thoughts.slice(0, 5).forEach((thought, i) => {
-                            setTimeout(() => createFloatingThought(thought.text), i * 1000);
+                            setTimeout(() => createFloatingThought(thought.text, thought.tag || 'normal'), i * 1000);
                         });
                     }
                 } catch (error) {
@@ -692,11 +888,13 @@
         
         // 기존 생각들 표시 (최근 5개만)
         thoughts.slice(0, 5).forEach((thought, i) => {
-            setTimeout(() => createFloatingThought(thought.text), i * 1000);
+            setTimeout(() => createFloatingThought(thought.text, thought.tag || 'normal'), i * 1000);
         });
 
-        // 포커스 자동
-        setTimeout(() => thoughtInput.focus(), 2000);
+        // 포커스 자동 - 모바일에서는 제외
+        if (window.innerWidth > 768) {
+            setTimeout(() => thoughtInput.focus(), 2000);
+        }
 
         // 주기적 자동 백업
         setInterval(autoBackup, 3600000); // 1시간마다
