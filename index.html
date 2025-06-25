@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>직관의 본질</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        /* 생각이 떠오르는 공간 */
+        .mind-space {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 중앙의 물음 */
+        .question {
+            font-size: 2rem;
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+            text-align: center;
+            padding: 2rem;
+            max-width: 600px;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* 생각 입력 */
+        .thought-input {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 500px;
+            padding: 1rem;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 1.2rem;
+            text-align: center;
+            outline: none;
+            opacity: 0;
+            animation: fadeIn 2s 1s forwards;
+        }
+
+        .thought-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 떠오르는 생각들 */
+        .floating-thought {
+            position: absolute;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            animation: float 20s infinite;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .floating-thought:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+            }
+            25% {
+                transform: translateY(-20px) translateX(20px);
+            }
+            50% {
+                transform: translateY(10px) translateX(-30px);
+            }
+            75% {
+                transform: translateY(-30px) translateX(10px);
+            }
+        }
+
+        /* 커서 추적 */
+        .cursor-light {
+            position: fixed;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+
+        /* 클릭 효과 */
+        .ripple {
+            position: fixed;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: ripple 1s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+                margin-left: -100px;
+                margin-top: -100px;
+            }
+        }
+
+        /* 저장된 생각들 */
+        .saved-thoughts {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            max-width: 300px;
+            max-height: 70vh;
+            overflow-y: auto;
+            opacity: 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        }
+
+        .saved-thoughts::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .saved-thoughts::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        .saved-thoughts.show {
+            opacity: 1;
+            transition: opacity 1s;
+        }
+
+        .thought-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: slideIn 0.5s forwards;
+        }
+
+        .thought-date {
+            font-size: 0.8rem;
+            opacity: 0.5;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* 시간 표시 */
+        .time {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            font-size: 3rem;
+            font-weight: 100;
+            opacity: 0.3;
+        }
+
+        /* 컨트롤 버튼들 */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .controls:hover {
+            opacity: 1;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* 파일 입력 숨김 */
+        #fileInput {
+            display: none;
+        }
+
+        /* 검색 모드 */
+        .search-mode {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 500px;
+            display: none;
+        }
+
+        .search-mode.active {
+            display: block;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 1.2rem;
+            text-align: center;
+            outline: none;
+            border-radius: 30px;
+        }
+
+        /* 통계 표시 */
+        .stats {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.3;
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .question {
+                font-size: 1.5rem;
+            }
+            
+            .thought-input {
+                width: 90%;
+                font-size: 1rem;
+            }
+            
+            .cursor-light {
+                display: none;
+            }
+
+            .controls {
+                bottom: 1rem;
+                right: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .control-btn {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mind-space" id="mindSpace">
+        <div class="time" id="clock"></div>
+        
+        <div class="question" id="question">
+            무엇이 떠오르나요?
+        </div>
+        
+        <input type="text" class="thought-input" id="thoughtInput" 
+               placeholder="그냥 입력하세요..." 
+               autocomplete="off">
+        
+        <div class="saved-thoughts" id="savedThoughts"></div>
+
+        <div class="search-mode" id="searchMode">
+            <input type="text" class="search-input" id="searchInput" 
+                   placeholder="검색... (날짜: 2024, 1월, 오늘, 어제) (ESC로 닫기)">
+        </div>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="controls">
+            <button class="control-btn" onclick="exportData()">내보내기</button>
+            <button class="control-btn" onclick="document.getElementById('fileInput').click()">불러오기</button>
+            <button class="control-btn" onclick="toggleSearch()">검색</button>
+        </div>
+
+        <input type="file" id="fileInput" accept=".json,.txt" onchange="importData(event)">
+    </div>
+    
+    <div class="cursor-light" id="cursorLight"></div>
+
+    <script>
+        // 시계
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // 커서 빛 효과
+        const cursorLight = document.getElementById('cursorLight');
+        document.addEventListener('mousemove', (e) => {
+            cursorLight.style.left = e.clientX + 'px';
+            cursorLight.style.top = e.clientY + 'px';
+        });
+
+        // 클릭 효과
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+            
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = e.clientX + 'px';
+            ripple.style.top = e.clientY + 'px';
+            document.body.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 1000);
+        });
+
+        // 생각 입력
+        const thoughtInput = document.getElementById('thoughtInput');
+        const savedThoughts = document.getElementById('savedThoughts');
+        const mindSpace = document.getElementById('mindSpace');
+        const question = document.getElementById('question');
+        
+        let thoughts = JSON.parse(localStorage.getItem('thoughts') || '[]');
+        
+        thoughtInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && thoughtInput.value.trim()) {
+                const thought = thoughtInput.value.trim();
+                saveThought(thought);
+                createFloatingThought(thought);
+                thoughtInput.value = '';
+                
+                // 질문 변경
+                const questions = [
+                    "또 무엇이 있나요?",
+                    "그 다음은요?",
+                    "더 깊이 들어가면?",
+                    "왜 그럴까요?",
+                    "어떤 느낌인가요?",
+                    "그것이 의미하는 것은?",
+                    "더 자세히 말해본다면?"
+                ];
+                question.textContent = questions[Math.floor(Math.random() * questions.length)];
+            }
+        });
+
+        // 생각 저장 (제한 없음)
+        function saveThought(thought) {
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const dateStr = now.toLocaleDateString('ko-KR', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+            });
+            
+            thoughts.unshift({
+                text: thought,
+                time: timeStr,
+                date: now.toISOString(),
+                dateStr: dateStr
+            });
+            
+            localStorage.setItem('thoughts', JSON.stringify(thoughts));
+            displaySavedThoughts();
+            updateStats();
+        }
+
+        // 저장된 생각 표시
+        function displaySavedThoughts(filter = '') {
+            if (thoughts.length === 0) return;
+            
+            savedThoughts.classList.add('show');
+            
+            let filteredThoughts = thoughts;
+            
+            if (filter) {
+                // 날짜 형식 검사 (2024, 2024-01, 2024-01-15, 1월, 1월 15일 등)
+                const datePatterns = [
+                    /^\d{4}$/,                    // 2024
+                    /^\d{4}-\d{1,2}$/,           // 2024-01
+                    /^\d{4}-\d{1,2}-\d{1,2}$/,  // 2024-01-15
+                    /^\d{1,2}월$/,               // 1월
+                    /^\d{1,2}월\s*\d{1,2}/,     // 1월 15일
+                    /^오늘$/,                     // 오늘
+                    /^어제$/,                     // 어제
+                    /^이번\s*주$/,               // 이번 주
+                    /^이번\s*달$/                // 이번 달
+                ];
+                
+                const isDateSearch = datePatterns.some(pattern => pattern.test(filter));
+                
+                if (isDateSearch) {
+                    filteredThoughts = thoughts.filter(t => {
+                        const thoughtDate = new Date(t.date);
+                        const today = new Date();
+                        
+                        // "오늘" 검색
+                        if (filter === '오늘') {
+                            return thoughtDate.toDateString() === today.toDateString();
+                        }
+                        
+                        // "어제" 검색
+                        if (filter === '어제') {
+                            const yesterday = new Date(today);
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            return thoughtDate.toDateString() === yesterday.toDateString();
+                        }
+                        
+                        // "이번 주" 검색
+                        if (filter === '이번 주' || filter === '이번주') {
+                            const weekStart = new Date(today);
+                            weekStart.setDate(today.getDate() - today.getDay());
+                            return thoughtDate >= weekStart;
+                        }
+                        
+                        // "이번 달" 검색
+                        if (filter === '이번 달' || filter === '이번달') {
+                            return thoughtDate.getMonth() === today.getMonth() && 
+                                   thoughtDate.getFullYear() === today.getFullYear();
+                        }
+                        
+                        // 연도 검색 (2024)
+                        if (/^\d{4}$/.test(filter)) {
+                            return thoughtDate.getFullYear() === parseInt(filter);
+                        }
+                        
+                        // 연-월 검색 (2024-01)
+                        if (/^\d{4}-\d{1,2}$/.test(filter)) {
+                            const [year, month] = filter.split('-');
+                            return thoughtDate.getFullYear() === parseInt(year) && 
+                                   thoughtDate.getMonth() === parseInt(month) - 1;
+                        }
+                        
+                        // 연-월-일 검색 (2024-01-15)
+                        if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(filter)) {
+                            const searchDate = new Date(filter + 'T00:00:00');
+                            return thoughtDate.toDateString() === searchDate.toDateString();
+                        }
+                        
+                        // 월 검색 (1월, 12월)
+                        if (/^\d{1,2}월$/.test(filter)) {
+                            const month = parseInt(filter) - 1;
+                            return thoughtDate.getMonth() === month;
+                        }
+                        
+                        // 월-일 검색 (1월 15일)
+                        if (/^\d{1,2}월\s*\d{1,2}/.test(filter)) {
+                            const match = filter.match(/(\d{1,2})월\s*(\d{1,2})/);
+                            const month = parseInt(match[1]) - 1;
+                            const day = parseInt(match[2]);
+                            return thoughtDate.getMonth() === month && thoughtDate.getDate() === day;
+                        }
+                        
+                        return false;
+                    });
+                } else {
+                    // 일반 텍스트 검색
+                    filteredThoughts = thoughts.filter(t => 
+                        t.text.toLowerCase().includes(filter.toLowerCase())
+                    );
+                }
+            }
+            
+            let html = '';
+            let currentDate = '';
+            
+            filteredThoughts.slice(0, 50).forEach((thought, i) => {
+                const thoughtDate = new Date(thought.date).toDateString();
+                
+                if (thoughtDate !== currentDate) {
+                    currentDate = thoughtDate;
+                    html += `<div class="thought-date">${getRelativeDate(thought.date)}</div>`;
+                }
+                
+                html += `
+                    <div class="thought-item" style="animation-delay: ${i * 0.05}s">
+                        <small style="opacity: 0.5">${thought.time}</small><br>
+                        ${thought.text}
+                    </div>
+                `;
+            });
+            
+            if (filteredThoughts.length === 0 && filter) {
+                html = '<div class="thought-item">검색 결과가 없습니다</div>';
+            }
+            
+            savedThoughts.innerHTML = html;
+        }
+
+        // 상대적 날짜 표시
+        function getRelativeDate(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return '오늘';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return '어제';
+            } else {
+                return date.toLocaleDateString('ko-KR', { 
+                    month: 'long', 
+                    day: 'numeric',
+                    weekday: 'short'
+                });
+            }
+        }
+
+        // 떠다니는 생각 생성
+        function createFloatingThought(text) {
+            const floater = document.createElement('div');
+            floater.className = 'floating-thought';
+            floater.textContent = text.length > 20 ? text.substring(0, 20) + '...' : text;
+            
+            // 랜덤 위치
+            floater.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+            floater.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+            floater.style.animationDelay = Math.random() * 5 + 's';
+            floater.style.animationDuration = (15 + Math.random() * 10) + 's';
+            
+            mindSpace.appendChild(floater);
+            
+            // 클릭하면 사라짐
+            floater.addEventListener('click', () => {
+                floater.style.opacity = '0';
+                setTimeout(() => floater.remove(), 300);
+            });
+            
+            // 시간이 지나면 자동으로 사라짐
+            setTimeout(() => {
+                if (floater.parentNode) {
+                    floater.style.opacity = '0';
+                    setTimeout(() => floater.remove(), 1000);
+                }
+            }, 30000);
+        }
+
+        // 데이터 내보내기
+        function exportData() {
+            const dataStr = JSON.stringify(thoughts, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `thoughts_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        // 데이터 불러오기
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        const merge = confirm('기존 기록과 병합하시겠습니까?\n(취소하면 기존 기록이 대체됩니다)');
+                        
+                        if (merge) {
+                            thoughts = [...imported, ...thoughts];
+                            // 중복 제거 (같은 시간의 같은 내용)
+                            thoughts = thoughts.filter((thought, index, self) =>
+                                index === self.findIndex((t) => 
+                                    t.date === thought.date && t.text === thought.text
+                                )
+                            );
+                        } else {
+                            thoughts = imported;
+                        }
+                        
+                        // 날짜순 정렬
+                        thoughts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        
+                        localStorage.setItem('thoughts', JSON.stringify(thoughts));
+                        displaySavedThoughts();
+                        updateStats();
+                        
+                        // 최근 5개 떠다니게 하기
+                        thoughts.slice(0, 5).forEach((thought, i) => {
+                            setTimeout(() => createFloatingThought(thought.text), i * 1000);
+                        });
+                    }
+                } catch (error) {
+                    alert('파일을 읽을 수 없습니다.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 검색 기능
+        const searchMode = document.getElementById('searchMode');
+        const searchInput = document.getElementById('searchInput');
+
+        function toggleSearch() {
+            searchMode.classList.toggle('active');
+            if (searchMode.classList.contains('active')) {
+                searchInput.focus();
+                thoughtInput.style.display = 'none';
+            } else {
+                searchInput.value = '';
+                displaySavedThoughts();
+                thoughtInput.style.display = 'block';
+                thoughtInput.focus();
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            displaySavedThoughts(e.target.value);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                toggleSearch();
+            }
+        });
+
+        // 통계 업데이트
+        function updateStats() {
+            const stats = document.getElementById('stats');
+            const total = thoughts.length;
+            const today = thoughts.filter(t => 
+                new Date(t.date).toDateString() === new Date().toDateString()
+            ).length;
+            
+            stats.textContent = `전체 ${total}개 | 오늘 ${today}개`;
+        }
+
+        // 키보드 단축키
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement !== thoughtInput) {
+                e.preventDefault();
+                toggleSearch();
+            }
+        });
+
+        // 자동 백업 (매일)
+        function autoBackup() {
+            const lastBackup = localStorage.getItem('lastBackup');
+            const today = new Date().toDateString();
+            
+            if (lastBackup !== today && thoughts.length > 0) {
+                localStorage.setItem('thoughtsBackup_' + today, JSON.stringify(thoughts));
+                localStorage.setItem('lastBackup', today);
+                
+                // 30일 이상 된 백업 삭제
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('thoughtsBackup_')) {
+                        const backupDate = new Date(key.replace('thoughtsBackup_', ''));
+                        if (backupDate < thirtyDaysAgo) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                });
+            }
+        }
+
+        // 초기 로드
+        displaySavedThoughts();
+        updateStats();
+        autoBackup();
+        
+        // 기존 생각들 표시 (최근 5개만)
+        thoughts.slice(0, 5).forEach((thought, i) => {
+            setTimeout(() => createFloatingThought(thought.text), i * 1000);
+        });
+
+        // 포커스 자동
+        setTimeout(() => thoughtInput.focus(), 2000);
+
+        // 주기적 자동 백업
+        setInterval(autoBackup, 3600000); // 1시간마다
+    </script>
+</body>
+</html>
