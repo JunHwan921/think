@@ -33,19 +33,7 @@
             align-items: center;
         }
 
-        /* 중앙의 물음 */
-        .question {
-            font-size: 2rem;
-            opacity: 0;
-            animation: fadeIn 2s forwards;
-            text-align: center;
-            padding: 2rem;
-            max-width: 600px;
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
+        /* 중앙의 물음 - 제거됨 */
 
         /* 생각 입력 */
         .thought-input {
@@ -64,7 +52,7 @@
             text-align: center;
             outline: none;
             opacity: 0;
-            animation: fadeIn 2s 1s forwards;
+            animation: fadeIn 2s forwards;
         }
 
         .thought-input::placeholder {
@@ -305,9 +293,7 @@
     <div class="mind-space" id="mindSpace">
         <div class="time" id="clock"></div>
         
-        <div class="question" id="question">
-            무엇이 떠오르나요?
-        </div>
+
         
         <input type="text" class="thought-input" id="thoughtInput" 
                placeholder="그냥 입력하세요..." 
@@ -378,18 +364,6 @@
                 saveThought(thought);
                 createFloatingThought(thought);
                 thoughtInput.value = '';
-                
-                // 질문 변경
-                const questions = [
-                    "또 무엇이 있나요?",
-                    "그 다음은요?",
-                    "더 깊이 들어가면?",
-                    "왜 그럴까요?",
-                    "어떤 느낌인가요?",
-                    "그것이 의미하는 것은?",
-                    "더 자세히 말해본다면?"
-                ];
-                question.textContent = questions[Math.floor(Math.random() * questions.length)];
             }
         });
 
