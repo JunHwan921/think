@@ -468,7 +468,7 @@
 
         <div class="search-mode" id="searchMode">
             <input type="text" class="search-input" id="searchInput" 
-                   placeholder="검색... (날짜: 2024, 1월, 오늘, 어제) (ESC로 닫기)">
+                   placeholder="검색... (날짜: 오늘, 1월 | 태그: 중요, 아이디어, 할일) (ESC로 닫기)">
         </div>
 
         <div class="stats" id="stats"></div>
@@ -593,90 +593,120 @@
             let filteredThoughts = thoughts;
             
             if (filter) {
-                // 날짜 형식 검사 (2024, 2024-01, 2024-01-15, 1월, 1월 15일 등)
-                const datePatterns = [
-                    /^\d{4}$/,                    // 2024
-                    /^\d{4}-\d{1,2}$/,           // 2024-01
-                    /^\d{4}-\d{1,2}-\d{1,2}$/,  // 2024-01-15
-                    /^\d{1,2}월$/,               // 1월
-                    /^\d{1,2}월\s*\d{1,2}/,     // 1월 15일
-                    /^오늘$/,                     // 오늘
-                    /^어제$/,                     // 어제
-                    /^이번\s*주$/,               // 이번 주
-                    /^이번\s*달$/                // 이번 달
-                ];
+                // 태그 검색 패턴 추가
+                const tagPatterns = {
+                    '중요': 'important',
+                    '빨강': 'important',
+                    '빨간색': 'important',
+                    '아이디어': 'idea',
+                    '초록': 'idea',
+                    '초록색': 'idea',
+                    '할일': 'todo',
+                    '할 일': 'todo',
+                    '파랑': 'todo',
+                    '파란색': 'todo',
+                    '추억': 'memory',
+                    '기억': 'memory',
+                    '주황': 'memory',
+                    '주황색': 'memory',
+                    '질문': 'question',
+                    '궁금': 'question',
+                    '보라': 'question',
+                    '보라색': 'question'
+                };
                 
-                const isDateSearch = datePatterns.some(pattern => pattern.test(filter));
+                // 태그 검색인지 확인
+                const isTagSearch = Object.keys(tagPatterns).includes(filter);
                 
-                if (isDateSearch) {
-                    filteredThoughts = thoughts.filter(t => {
-                        const thoughtDate = new Date(t.date);
-                        const today = new Date();
-                        
-                        // "오늘" 검색
-                        if (filter === '오늘') {
-                            return thoughtDate.toDateString() === today.toDateString();
-                        }
-                        
-                        // "어제" 검색
-                        if (filter === '어제') {
-                            const yesterday = new Date(today);
-                            yesterday.setDate(yesterday.getDate() - 1);
-                            return thoughtDate.toDateString() === yesterday.toDateString();
-                        }
-                        
-                        // "이번 주" 검색
-                        if (filter === '이번 주' || filter === '이번주') {
-                            const weekStart = new Date(today);
-                            weekStart.setDate(today.getDate() - today.getDay());
-                            return thoughtDate >= weekStart;
-                        }
-                        
-                        // "이번 달" 검색
-                        if (filter === '이번 달' || filter === '이번달') {
-                            return thoughtDate.getMonth() === today.getMonth() && 
-                                   thoughtDate.getFullYear() === today.getFullYear();
-                        }
-                        
-                        // 연도 검색 (2024)
-                        if (/^\d{4}$/.test(filter)) {
-                            return thoughtDate.getFullYear() === parseInt(filter);
-                        }
-                        
-                        // 연-월 검색 (2024-01)
-                        if (/^\d{4}-\d{1,2}$/.test(filter)) {
-                            const [year, month] = filter.split('-');
-                            return thoughtDate.getFullYear() === parseInt(year) && 
-                                   thoughtDate.getMonth() === parseInt(month) - 1;
-                        }
-                        
-                        // 연-월-일 검색 (2024-01-15)
-                        if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(filter)) {
-                            const searchDate = new Date(filter + 'T00:00:00');
-                            return thoughtDate.toDateString() === searchDate.toDateString();
-                        }
-                        
-                        // 월 검색 (1월, 12월)
-                        if (/^\d{1,2}월$/.test(filter)) {
-                            const month = parseInt(filter) - 1;
-                            return thoughtDate.getMonth() === month;
-                        }
-                        
-                        // 월-일 검색 (1월 15일)
-                        if (/^\d{1,2}월\s*\d{1,2}/.test(filter)) {
-                            const match = filter.match(/(\d{1,2})월\s*(\d{1,2})/);
-                            const month = parseInt(match[1]) - 1;
-                            const day = parseInt(match[2]);
-                            return thoughtDate.getMonth() === month && thoughtDate.getDate() === day;
-                        }
-                        
-                        return false;
-                    });
+                if (isTagSearch) {
+                    const tagName = tagPatterns[filter];
+                    filteredThoughts = thoughts.filter(t => t.tag === tagName);
                 } else {
-                    // 일반 텍스트 검색
-                    filteredThoughts = thoughts.filter(t => 
-                        t.text.toLowerCase().includes(filter.toLowerCase())
-                    );
+                    // 날짜 형식 검사 (2024, 2024-01, 2024-01-15, 1월, 1월 15일 등)
+                    const datePatterns = [
+                        /^\d{4}$/,                    // 2024
+                        /^\d{4}-\d{1,2}$/,           // 2024-01
+                        /^\d{4}-\d{1,2}-\d{1,2}$/,  // 2024-01-15
+                        /^\d{1,2}월$/,               // 1월
+                        /^\d{1,2}월\s*\d{1,2}/,     // 1월 15일
+                        /^오늘$/,                     // 오늘
+                        /^어제$/,                     // 어제
+                        /^이번\s*주$/,               // 이번 주
+                        /^이번\s*달$/                // 이번 달
+                    ];
+                    
+                    const isDateSearch = datePatterns.some(pattern => pattern.test(filter));
+                    
+                    if (isDateSearch) {
+                        filteredThoughts = thoughts.filter(t => {
+                            const thoughtDate = new Date(t.date);
+                            const today = new Date();
+                            
+                            // "오늘" 검색
+                            if (filter === '오늘') {
+                                return thoughtDate.toDateString() === today.toDateString();
+                            }
+                            
+                            // "어제" 검색
+                            if (filter === '어제') {
+                                const yesterday = new Date(today);
+                                yesterday.setDate(yesterday.getDate() - 1);
+                                return thoughtDate.toDateString() === yesterday.toDateString();
+                            }
+                            
+                            // "이번 주" 검색
+                            if (filter === '이번 주' || filter === '이번주') {
+                                const weekStart = new Date(today);
+                                weekStart.setDate(today.getDate() - today.getDay());
+                                return thoughtDate >= weekStart;
+                            }
+                            
+                            // "이번 달" 검색
+                            if (filter === '이번 달' || filter === '이번달') {
+                                return thoughtDate.getMonth() === today.getMonth() && 
+                                       thoughtDate.getFullYear() === today.getFullYear();
+                            }
+                            
+                            // 연도 검색 (2024)
+                            if (/^\d{4}$/.test(filter)) {
+                                return thoughtDate.getFullYear() === parseInt(filter);
+                            }
+                            
+                            // 연-월 검색 (2024-01)
+                            if (/^\d{4}-\d{1,2}$/.test(filter)) {
+                                const [year, month] = filter.split('-');
+                                return thoughtDate.getFullYear() === parseInt(year) && 
+                                       thoughtDate.getMonth() === parseInt(month) - 1;
+                            }
+                            
+                            // 연-월-일 검색 (2024-01-15)
+                            if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(filter)) {
+                                const searchDate = new Date(filter + 'T00:00:00');
+                                return thoughtDate.toDateString() === searchDate.toDateString();
+                            }
+                            
+                            // 월 검색 (1월, 12월)
+                            if (/^\d{1,2}월$/.test(filter)) {
+                                const month = parseInt(filter) - 1;
+                                return thoughtDate.getMonth() === month;
+                            }
+                            
+                            // 월-일 검색 (1월 15일)
+                            if (/^\d{1,2}월\s*\d{1,2}/.test(filter)) {
+                                const match = filter.match(/(\d{1,2})월\s*(\d{1,2})/);
+                                const month = parseInt(match[1]) - 1;
+                                const day = parseInt(match[2]);
+                                return thoughtDate.getMonth() === month && thoughtDate.getDate() === day;
+                            }
+                            
+                            return false;
+                        });
+                    } else {
+                        // 일반 텍스트 검색
+                        filteredThoughts = thoughts.filter(t => 
+                            t.text.toLowerCase().includes(filter.toLowerCase())
+                        );
+                    }
                 }
             }
             
